@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import find_packages, setup
 
 setup(name='topmine',
       version='0.2.8',
@@ -8,6 +8,6 @@ setup(name='topmine',
       author='Fabian Latorre',
       author_email='latorrefabian@gmail.com',
       url='',
-      packages=['topmine'],
+      packages=find_packages(),
       install_requires=['py>=1.4'],
 )

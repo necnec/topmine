@@ -5,8 +5,7 @@ import copy
 import math
 from . import datastruct
 
-
-def phrase_frequency(corpus, min_support):
+def phrase_frequency(corpus, min_support, delimeter='_'):
     D = copy.copy(corpus)
     indices = [range(len(document)) for document in D]
     counter = Counter(chain(*D))
@@ -15,7 +14,7 @@ def phrase_frequency(corpus, min_support):
         for d, document in zip(range(len(D)-1, -1, -1), reversed(D)):
             indices[d] = [
                 i for i in indices[d]
-                if counter[' '.join(document[i: i+n-1])] > min_support
+                if counter[delimeter.join(document[i: i+n-1])] > min_support
                 ]
             if not indices[d]:
                 indices.pop(d)
@@ -24,7 +23,7 @@ def phrase_frequency(corpus, min_support):
             else:
                 for i in indices[d]:
                     if i + 1 in indices[d]:
-                        phrase = ' '.join(document[i: i+n])
+                        phrase = delimeter.join(document[i: i+n])
                         counter.update([phrase])
             indices[d].pop()
         n = n + 1
@@ -32,9 +31,10 @@ def phrase_frequency(corpus, min_support):
 
 
 class Token(datastruct.Node):
-    def __init__(self, string):
+    def __init__(self, string, delimeter='_'):
         super().__init__()
         self.string = string
+        self.delimeter = delimeter
 
     def merge(self):
         '''
@@ -44,14 +44,14 @@ class Token(datastruct.Node):
         if self.next_node:
             pop_node, self.next_node = (
                 self.next_node, self.next_node.next_node)
-            self.string += ' ' + pop_node.string
+            self.string += self.delimeter + pop_node.string
         else:
             raise IndexError('impossible to merge the last node')
         return pop_node
 
     def calculate_key(self, counter, l):
         if self.next_node:
-            return _significance(self.string, self.next_node.string, counter, l)
+            return _significance(self.string, self.next_node.string, counter, l, self.delimeter)
         else:
             return -math.inf
 
@@ -67,8 +67,8 @@ def recalculate_keys(linkedlist, counter, l):
     return
 
 
-def segment_document(document, threshold, counter, l):
-    tokens = [Token(string=x) for x in document]
+def segment_document(document, threshold, counter, l, delimeter='_'):
+    tokens = [Token(string=x, delimeter=delimeter) for x in document]
     linkedlist = datastruct.LinkedList(nodes=tokens)
     recalculate_keys(linkedlist, counter, l)
     heap = datastruct.Heap(nodes=tokens)
@@ -104,8 +104,8 @@ def topmine_tokenizer(corpus, threshold, min_support):
     return tokenize, [key for key in counter.keys()]
 
 
-def _significance(a, b, counter, l):
-    ab = counter[' '.join([a, b])]
+def _significance(a, b, counter, l, delimeter):
+    ab = counter[delimeter.join([a, b])]
     if ab > 0:
         return (ab - (counter[a] * counter[b]) / l) / math.sqrt(ab)
     else:
